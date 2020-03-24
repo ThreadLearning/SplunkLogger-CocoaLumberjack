@@ -2,18 +2,18 @@
 // Created by Mats Melke on 2014-02-20.
 //
 
-#import "LogglyFields.h"
+#import "SplunkFields.h"
 
 @import UIKit;
 
-@implementation LogglyFields {
+@implementation SplunkFields {
     dispatch_queue_t _queue;
     NSDictionary *_fieldsDictionary;
 }
 
 - (id)init {
     if((self = [super init])) {
-        _queue = dispatch_queue_create("se.baresi.logglylogger.logglyfields.queue", NULL);
+        _queue = dispatch_queue_create("se.baresi.splunklogger.splunkfields.queue", NULL);
         NSMutableDictionary *dict = [NSMutableDictionary dictionaryWithCapacity:0];
         [dict setObject:[[NSLocale preferredLanguages] objectAtIndex:0] forKey:@"lang"];
         id bundleDisplayName = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleDisplayName"];
@@ -38,9 +38,9 @@
     return self;
 }
 
-#pragma mark implementation of LogglyFieldsDelegate protocol
+#pragma mark implementation of SplunkFieldsDelegate protocol
 
-- (NSDictionary *)logglyFieldsToIncludeInEveryLogStatement {
+- (NSDictionary *)splunkFieldsToIncludeInEveryLogStatement {
     // The dict may be altered by one of the setters, so lets use a queue for thread safety
     __block NSDictionary *dict;
     dispatch_sync(_queue, ^{

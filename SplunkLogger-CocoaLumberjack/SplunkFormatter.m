@@ -2,9 +2,9 @@
 // Created by Mats Melke on 2014-02-18.
 //
 
-#import "LogglyFormatter.h"
-#import "LogglyFields.h"
-#define kLogglyFormatStringWhenLogMsgIsNotJson @"{\"loglevel\":\"%@\",\"timestamp\":\"%@\",\"file\":\"%@\",\"fileandlinenumber\":\"%@:%lu\",\"jsonerror\":\"JSON Output Error when trying to create Loggly JSON\",\"rawlogmessage\":\"%@\"}"
+#import "SplunkFormatter.h"
+#import "SplunkFields.h"
+#define kSplunkFormatStringWhenLogMsgIsNotJson @"{\"loglevel\":\"%@\",\"timestamp\":\"%@\",\"file\":\"%@\",\"fileandlinenumber\":\"%@:%lu\",\"jsonerror\":\"JSON Output Error when trying to create Splunk JSON\",\"rawlogmessage\":\"%@\"}"
 
 #pragma mark NSMutableDictionary category.
 // Defined here so it doesn't spill over to the client projects.
@@ -29,33 +29,33 @@
 
 
 
-@implementation LogglyFormatter {
-    id<LogglyFieldsDelegate> logglyFieldsDelegate;
+@implementation SplunkFormatter {
+    id<SplunkFieldsDelegate> splunkFieldsDelegate;
 }
 
 - (id)init {
     if((self = [super init]))
     {
-        // Use standard LogglyFields Delegate
-        logglyFieldsDelegate = [[LogglyFields alloc] init];
+        // Use standard SplunkFields Delegate
+        splunkFieldsDelegate = [[SplunkFields alloc] init];
         self.alwaysIncludeRawMessage = YES;
     }
     return self;
 }
 
-- (id)initWithLogglyFieldsDelegate:(id<LogglyFieldsDelegate>)delegate {
+- (id)initWithSplunkFieldsDelegate:(id<SplunkFieldsDelegate>)delegate {
     if((self = [super init]))
     {
-        logglyFieldsDelegate = delegate;
+        splunkFieldsDelegate = delegate;
         self.alwaysIncludeRawMessage = YES;
     }
     return self;
 }
 
-- (NSString *)formatLogMessage:(DDLogMessage *)logMessage
+- (NSDictionary *)formatLogMessage:(DDLogMessage *)logMessage
 {
     // Get the fields that should be included in every log entry.
-    NSMutableDictionary *logfields = [NSMutableDictionary dictionaryWithDictionary:[logglyFieldsDelegate logglyFieldsToIncludeInEveryLogStatement]];
+    NSMutableDictionary *logfields = [NSMutableDictionary dictionaryWithDictionary:[splunkFieldsDelegate splunkFieldsToIncludeInEveryLogStatement]];
 
     NSString *logLevel;
     switch (logMessage->_flag)
@@ -75,7 +75,7 @@
     [logfields setObjectNilSafe:filestring forKey:@"file"];
     [logfields setObjectNilSafe:[NSString stringWithFormat:@"%@:%lu", filestring, (unsigned long)logMessage->_line] forKey:@"fileandlinenumber"];
 
-    // newlines are not allowed in POSTS to Loggly
+    // newlines are not allowed in POSTS to Splunk
     NSString *logMsg = [logMessage->_message stringByReplacingOccurrencesOfString:@"\n" withString:@" "];
     [logfields setObjectNilSafe:logMsg forKey:@"rawlogmessage"];
 
@@ -92,17 +92,7 @@
         }
     }
 
-    NSError *outputJsonError;
-    NSData *outputJson = [NSJSONSerialization dataWithJSONObject:logfields options:0 error:&outputJsonError];
-    if (outputJsonError) {
-        return [NSString stringWithFormat:kLogglyFormatStringWhenLogMsgIsNotJson, logLevel, iso8601DateString, filestring, filestring, (unsigned long)logMessage->_line, logMsg];
-    }
-    NSString *jsonString = [[NSString alloc] initWithData:outputJson encoding:NSUTF8StringEncoding];
-    if (jsonString) {
-        return jsonString;
-    } else {
-        return [NSString stringWithFormat:kLogglyFormatStringWhenLogMsgIsNotJson, logLevel, iso8601DateString, filestring, filestring, (unsigned long)logMessage->_line, logMsg];
-    }
+    return @{@"event": logfields};
 }
 
 #pragma mark Private methods

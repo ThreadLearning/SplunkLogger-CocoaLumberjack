@@ -3,9 +3,9 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "LogglyFormatter.h"
+#import "SplunkFormatter.h"
 
-@interface LogglyFields : NSObject <LogglyFieldsDelegate>
+@interface SplunkFields : NSObject <SplunkFieldsDelegate>
 @property (strong, nonatomic) NSString *appversion;
 @property (strong, nonatomic) NSString *userid;
 @property (strong, nonatomic) NSString *sessionid;
